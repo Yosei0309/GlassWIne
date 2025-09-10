@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>グラスワインリスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #FDFBF5;
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #A47551;
+            color: #FFFFFF;
+            font-weight: 500;
+        }
+        .wine-card {
+            background-color: #FFFFFF;
+            border: 1px solid #EAEAEA;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        .wine-card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            transform: translateY(-4px);
+        }
+        .tag {
+            background-color: #F0EAE4;
+            color: #A47551;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#4A4A4A] tracking-tight">本日のグラスワイン</h1>
+            <p class="text-neutral-500 mt-2">ワインの種類を選択して、詳細情報をご覧ください。</p>
+        </header>
+        <nav class="flex justify-center space-x-2 sm:space-x-4 mb-8">
+            <button class="nav-button active text-sm sm:text-base px-4 py-2 rounded-full border border-gray-200 bg-white" data-filter="all">すべて</button>
+            <button class="nav-button text-sm sm:text-base px-4 py-2 rounded-full border border-gray-200 bg-white" data-filter="スパークリング">泡</button>
+            <button class="nav-button text-sm sm:text-base px-4 py-2 rounded-full border border-gray-200 bg-white" data-filter="白ワイン">白</button>
+            <button class="nav-button text-sm sm:text-base px-4 py-2 rounded-full border border-gray-200 bg-white" data-filter="赤ワイン">赤</button>
+        </nav>
+        <main id="wine-list" class="grid grid-cols-1 gap-8">
+        </main>
+    </div>
+    <script>
+        const wineData = [
+            {
+                id: 'skyfall-chardonnay',
+                name: 'Skyfall Vineyard Chardonnay',
+                winery: 'Skyfall Vineyard',
+                vintage: 2014,
+                region: 'アメリカ, ワシントン州, コロンビア・ヴァレー',
+                varietals: 'シャルドネ 93%, ルーサンヌ 3%, セミヨン 2%, ヴィオニエ 2%',
+                type: '白ワイン',
+                image: 'https://placehold.co/300x600/FFFFFF/A47551?text=SKYFALL',
+                aroma: '炒ったヘーゼルナッツやアジア梨の香り。トーストしたアーモンド、マイヤーレモン、クレームブリュレのニュアンスも感じられます。',
+                flavor: 'リッチでクリーミーな口当たり。熟したリンゴのような果実味と、それを支えるしっかりとした酸のバランスが取れています。',
+                pairings: '白身魚のソテー、鶏肉のクリーム煮、ホタテのバター焼き',
+                alcohol: '13.9%',
+                profile: { 'ボディ': 4, '酸味': 3, '渋み': 0, '甘み': 2, '果実味': 4 },
+            },
+            {
+                id: 'cabernet-sauvignon',
+                name: 'Vintner\'s Reserve Cabernet Sauvignon',
+                winery: 'Kendall-Jackson',
+                vintage: 2021,
+                region: 'アメリカ, カリフォルニア州, ソノマ・カウンティ',
+                varietals: 'カベルネ・ソーヴィニヨン',
+                type: '赤ワイン',
+                image: 'https://placehold.co/300x600/FFFFFF/8C2F39?text=K-J',
+                aroma: 'ブラックチェリー、カシス、ブラックベリーの豊かな黒系果実のアロマに、モカやスパイスの香りが層をなしています。',
+                flavor: '深みのある果実味と、しっかりとした骨格を持つタンニンが特徴。バニラやオークのニュアンスが長い余韻をもたらします。',
+                pairings: '牛肉のステーキ、ビーフシチュー、熟成チーズ',
+                alcohol: '14.5%',
+                profile: { 'ボディ': 5, '酸味': 3, '渋み': 4, '甘み': 1, '果実味': 5 },
+            },
+            {
+                id: 'prosecco-brut',
+                name: 'Prosecco Brut',
+                winery: 'Mionetto',
+                vintage: 'NV',
+                region: 'イタリア, ヴェネト州',
+                varietals: 'グレラ',
+                type: 'スパークリング',
+                image: 'https://placehold.co/300x600/FFFFFF/D4AC0D?text=MIONETTO',
+                aroma: 'ゴールデンデリシャス種のリンゴ、蜂蜜、アカシアの花のような華やかな香り。',
+                flavor: 'フレッシュで生き生きとした果実味が特徴。きめ細やかな泡立ちが心地よく、ドライでクリーンな後味です。',
+                pairings: '食前酒として、生ハムやサラミ、魚介のフリット',
+                alcohol: '11.0%',
+                profile: { 'ボディ': 2, '酸味': 4, '渋み': 0, '甘み': 2, '果実味': 3 },
+            }
+        ];
+        let currentFilter = 'all';
+        const wineListContainer = document.getElementById('wine-list');
+        const navButtons = document.querySelectorAll('.nav-button');
+        let chartInstances = {};
+        const createWineCardHTML = (wine) => {
+            return `
+                <article class="wine-card rounded-2xl p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-center">
+                    <div class="md:col-span-1 flex justify-center">
+                        <img src="${wine.image}" alt="${wine.name}" class="max-h-96 object-contain">
+                    </div>
+                    <div class="md:col-span-2">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                           <span class="tag text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">${wine.type}</span>
+                           <span class="tag text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">${wine.vintage}</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">${wine.name}</h2>
+                        <p class="text-md text-neutral-600 mb-4">${wine.winery}</p>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                            <div>
+                                <h3 class="text-lg font-semibold border-b-2 border-[#A47551] pb-1 mb-3">基本情報</h3>
+                                <div class="space-y-2 text-sm text-neutral-700">
+                                    <p><strong>生産地:</strong> ${wine.region}</p>
+                                    <p><strong>品　種:</strong> ${wine.varietals}</p>
+                                    <p><strong>度　数:</strong> ${wine.alcohol}</p>
+                                </div>
+                                <h3 class="text-lg font-semibold border-b-2 border-[#A47551] pb-1 mt-4 mb-3">テイスティング</h3>
+                                <div class="space-y-2 text-sm text-neutral-700">
+                                    <p><strong>香り:</strong> ${wine.aroma}</p>
+                                    <p><strong>味わい:</strong> ${wine.flavor}</p>
+                                </div>
+                                <h3 class="text-lg font-semibold border-b-2 border-[#A47551] pb-1 mt-4 mb-3">おすすめのペアリング</h3>
+                                <p class="text-sm text-neutral-700">${wine.pairings}</p>
+                            </div>
+                            <div class="flex flex-col items-center justify-center">
+                                <div class="chart-container">
+                                    <canvas id="chart-${wine.id}"></canvas>
+                                </div>
+                                <p class="text-sm text-neutral-500 mt-2">ワインの特性チャート</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            `;
+        };
+        const renderWines = () => {
+            wineListContainer.innerHTML = '';
+            const filteredWines = wineData.filter(wine => currentFilter === 'all' || wine.type === currentFilter);
+            if (filteredWines.length === 0) {
+                 wineListContainer.innerHTML = `<p class="text-center text-neutral-500">このカテゴリーのワインはありません。</p>`;
+                 return;
+            }
+            filteredWines.forEach(wine => {
+                wineListContainer.innerHTML += createWineCardHTML(wine);
+            });
+            filteredWines.forEach(wine => {
+                createChart(wine);
+            });
+        };
+        const createChart = (wine) => {
+            const ctx = document.getElementById(`chart-${wine.id}`).getContext('2d');
+            if (chartInstances[wine.id]) {
+                chartInstances[wine.id].destroy();
+            }
+            chartInstances[wine.id] = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(wine.profile),
+                    datasets: [{
+                        label: wine.name,
+                        data: Object.values(wine.profile),
+                        fill: true,
+                        backgroundColor: 'rgba(164, 117, 81, 0.2)',
+                        borderColor: 'rgb(164, 117, 81)',
+                        pointBackgroundColor: 'rgb(164, 117, 81)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(164, 117, 81)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#EAEAEA' },
+                            grid: { color: '#EAEAEA' },
+                            pointLabels: { font: { size: 12 }, color: '#4A4A4A' },
+                            min: 0,
+                            max: 5,
+                            ticks: {
+                                stepSize: 1,
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                currentFilter = button.dataset.filter;
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                renderWines();
+            });
+        });
+        window.onload = renderWines;
+    </script>
+</body>
+</html>
